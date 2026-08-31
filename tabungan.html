@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Tabungan Harian</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:#f5f6f8;
+  color:#171717;
+}
+
+.container{
+  max-width:520px;
+  margin:auto;
+  padding:22px 16px 40px;
+}
+
+h1{
+  font-size:28px;
+  margin:4px 0 6px;
+}
+
+.sub{
+  color:#666;
+  margin:0 0 18px;
+}
+
+.card{
+  background:#fff;
+  border-radius:20px;
+  padding:18px;
+  margin-bottom:14px;
+  box-shadow:0 4px 18px rgba(0,0,0,.06);
+}
+
+.stats{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.stat{
+  background:#f7f7f8;
+  border-radius:14px;
+  padding:14px;
+}
+
+.label{
+  font-size:13px;
+  color:#777;
+}
+
+.value{
+  font-size:21px;
+  font-weight:700;
+  margin-top:4px;
+}
+
+.progress{
+  height:12px;
+  background:#e8e8eb;
+  border-radius:99px;
+  overflow:hidden;
+  margin:12px 0 6px;
+}
+
+.bar{
+  height:100%;
+  width:0%;
+  background:#111;
+  border-radius:99px;
+  transition:.25s;
+}
+
+.progress-text{
+  font-size:13px;
+  color:#666;
+}
+
+.month-nav{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:14px;
+}
+
+.month-title{
+  flex:1;
+  text-align:center;
+  font-weight:700;
+  font-size:17px;
+}
+
+.nav-btn{
+  width:auto;
+  min-width:48px;
+  padding:10px 15px;
+  background:#eeeef0;
+  color:#111;
+  font-size:22px;
+}
+
+.day{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:13px 0;
+  border-bottom:1px solid #eee;
+}
+
+.day:last-child{
+  border-bottom:0;
+}
+
+.day input{
+  width:23px;
+  height:23px;
+  accent-color:#111;
+}
+
+.date{
+  font-weight:650;
+  flex:1;
+}
+
+.amount{
+  color:#555;
+  font-size:14px;
+}
+
+.done .date{
+  text-decoration:line-through;
+  color:#999;
+}
+
+.today{
+  background:#f7f7f8;
+  border-radius:12px;
+  padding-left:8px;
+  padding-right:8px;
+}
+
+button{
+  width:100%;
+  border:0;
+  border-radius:13px;
+  padding:13px;
+  font-size:15px;
+  font-weight:650;
+  background:#111;
+  color:#fff;
+}
+
+.reset{
+  background:#111;
+}
+
+.history-title{
+  font-size:18px;
+  font-weight:750;
+  margin-bottom:12px;
+}
+
+.history-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:13px 0;
+  border-bottom:1px solid #eee;
+  gap:10px;
+}
+
+.history-row:last-child{
+  border-bottom:0;
+}
+
+.history-month{
+  font-weight:650;
+}
+
+.history-info{
+  text-align:right;
+}
+
+.history-total{
+  font-weight:700;
+}
+
+.history-days{
+  font-size:12px;
+  color:#777;
+  margin-top:2px;
+}
+
+.empty{
+  color:#777;
+  font-size:14px;
+  text-align:center;
+  padding:8px 0;
+}
+
+.note{
+  font-size:12px;
+  color:#777;
+  text-align:center;
+  margin-top:12px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <h1>💰 Tabungan Harian</h1>
+
+  <p class="sub">
+    Rp20.000 setiap Senin–Jumat
+  </p>
+
+  <!-- PILIH BULAN -->
+  <div class="month-nav">
+
+    <button class="nav-btn" onclick="changeMonth(-1)">
+      ‹
+    </button>
+
+    <div class="month-title" id="monthTitle"></div>
+
+    <button class="nav-btn" onclick="changeMonth(1)">
+      ›
+    </button>
+
+  </div>
+
+  <!-- STATISTIK BULAN -->
+  <div class="card">
+
+    <div class="stats">
+
+      <div class="stat">
+        <div class="label">Terkumpul</div>
+        <div class="value" id="total">Rp0</div>
+      </div>
+
+      <div class="stat">
+        <div class="label">Target</div>
+        <div class="value" id="target">Rp0</div>
+      </div>
+
+    </div>
+
+    <div class="progress">
+      <div class="bar" id="bar"></div>
+    </div>
+
+    <div class="progress-text" id="progressText">
+      0 dari 0 hari • 0%
+    </div>
+
+  </div>
+
+  <!-- DAFTAR HARI -->
+  <div class="card" id="list"></div>
+
+  <!-- RIWAYAT -->
+  <div class="card">
+
+    <div class="history-title">
+      📊 Riwayat Tabungan
+    </div>
+
+    <div id="history"></div>
+
+  </div>
+
+  <!-- RESET -->
+  <div class="card">
+
+    <button class="reset" onclick="resetMonth()">
+      Reset bulan ini
+    </button>
+
+    <div class="note">
+      Data setiap bulan tersimpan otomatis di browser.
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+const NOMINAL = 20000;
+
+/* Bulan yang sedang dibuka */
+let currentDate = new Date();
+
+const monthNames = [
+  "Januari",
+  "Februari",
+  "Maret",
+  "April",
+  "Mei",
+  "Juni",
+  "Juli",
+  "Agustus",
+  "September",
+  "Oktober",
+  "November",
+  "Desember"
+];
+
+const weekdayNames = [
+  "Minggu",
+  "Senin",
+  "Selasa",
+  "Rabu",
+  "Kamis",
+  "Jumat",
+  "Sabtu"
+];
+
+
+/* Format Rupiah */
+function rupiah(n){
+  return "Rp" + n.toLocaleString("id-ID");
+}
+
+
+/*
+  KEY setiap bulan berbeda.
+
+  Contoh:
+
+  tabungan-2026-09
+  tabungan-2026-10
+  tabungan-2027-01
+
+  Jadi data tidak tertimpa.
+*/
+function getKey(date=currentDate){
+
+  const year = date.getFullYear();
+
+  const month =
+    String(date.getMonth()+1).padStart(2,"0");
+
+  return "tabungan-" + year + "-" + month;
+}
+
+
+/*
+  Ambil semua hari Senin-Jumat
+  dari bulan tertentu.
+*/
+function getWeekdays(date=currentDate){
+
+  const year = date.getFullYear();
+  const month = date.getMonth();
+
+  const days = [];
+
+  const lastDay =
+    new Date(year,month+1,0).getDate();
+
+  for(let day=1; day<=lastDay; day++){
+
+    const d =
+      new Date(year,month,day);
+
+    const weekday =
+      d.getDay();
+
+    /*
+      0 = Minggu
+      6 = Sabtu
+
+      Jadi Sabtu dan Minggu
+      otomatis tidak dimasukkan.
+    */
+    if(weekday !== 0 && weekday !== 6){
+      days.push(d);
+    }
+
+  }
+
+  return days;
+}
+
+
+/* Ambil data tabungan */
+function getSaved(date=currentDate){
+
+  return JSON.parse(
+    localStorage.getItem(getKey(date)) || "[]"
+  );
+
+}
+
+
+/* Simpan data */
+function saveSaved(data,date=currentDate){
+
+  localStorage.setItem(
+    getKey(date),
+    JSON.stringify(data)
+  );
+
+}
+
+
+/* Pindah bulan */
+function changeMonth(amount){
+
+  currentDate.setMonth(
+    currentDate.getMonth() + amount
+  );
+
+  render();
+
+}
+
+
+/*
+  Tampilkan bulan aktif
+*/
+function render(){
+
+  const days =
+    getWeekdays(currentDate);
+
+  const saved =
+    getSaved(currentDate);
+
+  const year =
+    currentDate.getFullYear();
+
+  const month =
+    currentDate.getMonth();
+
+
+  /* Judul bulan */
+  document.getElementById("monthTitle").textContent =
+    monthNames[month] + " " + year;
+
+
+  /* Target */
+  const target =
+    days.length * NOMINAL;
+
+  document.getElementById("target").textContent =
+    rupiah(target);
+
+
+  /* Daftar hari */
+  const list =
+    document.getElementById("list");
+
+  list.innerHTML = "";
+
+
+  days.forEach((date,i)=>{
+
+    const row =
+      document.createElement("label");
+
+    const checked =
+      saved[i] === true;
+
+
+    /* Apakah hari ini? */
+    const now =
+      new Date();
+
+    const isToday =
+      date.getFullYear() === now.getFullYear() &&
+      date.getMonth() === now.getMonth() &&
+      date.getDate() === now.getDate();
+
+
+    row.className =
+      "day" +
+      (checked ? " done" : "") +
+      (isToday ? " today" : "");
+
+
+    row.innerHTML = `
+
+      <input
+        type="checkbox"
+        ${checked ? "checked" : ""}
+      >
+
+      <span class="date">
+        ${weekdayNames[date.getDay()]},
+        ${date.getDate()}
+        ${monthNames[month]}
+      </span>
+
+      <span class="amount">
+        ${rupiah(NOMINAL)}
+      </span>
+
+    `;
+
+
+    row.querySelector("input")
+      .addEventListener("change",e=>{
+
+        const newSaved =
+          getSaved(currentDate);
+
+        newSaved[i] =
+          e.target.checked;
+
+        saveSaved(
+          newSaved,
+          currentDate
+        );
+
+        render();
+
+      });
+
+
+    list.appendChild(row);
+
+  });
+
+
+  /* Hitung bulan */
+  const count =
+    saved.filter(Boolean).length;
+
+  const total =
+    count * NOMINAL;
+
+  const percentage =
+    days.length === 0
+    ? 0
+    : Math.round(
+        count / days.length * 100
+      );
+
+
+  document.getElementById("total")
+    .textContent = rupiah(total);
+
+  document.getElementById("bar")
+    .style.width = percentage + "%";
+
+  document.getElementById("progressText")
+    .textContent =
+      `${count} dari ${days.length} hari • ${percentage}%`;
+
+
+  /* Update riwayat */
+  renderHistory();
+
+}
+
+
+/*
+  RIWAYAT SEMUA BULAN
+
+  Kita mencari semua data dengan awalan:
+  tabungan-
+
+  Jadi bulan lama tetap muncul.
+*/
+function renderHistory(){
+
+  const history =
+    document.getElementById("history");
+
+  history.innerHTML = "";
+
+
+  const records = [];
+
+
+  for(let i=0;i<localStorage.length;i++){
+
+    const key =
+      localStorage.key(i);
+
+
+    if(!key.startsWith("tabungan-")){
+      continue;
+    }
+
+
+    const parts =
+      key.split("-");
+
+    if(parts.length !== 3){
+      continue;
+    }
+
+
+    const year =
+      Number(parts[1]);
+
+    const month =
+      Number(parts[2])-1;
+
+
+    const date =
+      new Date(year,month,1);
+
+
+    const saved =
+      JSON.parse(
+        localStorage.getItem(key) || "[]"
+      );
+
+
+    const days =
+      getWeekdays(date);
+
+
+    const count =
+      saved.filter(Boolean).length;
+
+
+    const total =
+      count * NOMINAL;
+
+
+    /*
+      Hanya tampilkan bulan
+      yang memang sudah pernah
+      disimpan/dicentang.
+    */
+    if(count > 0){
+
+      records.push({
+        date,
+        count,
+        total,
+        days:days.length
+      });
+
+    }
+
+  }
+
+
+  /*
+    Urutkan dari bulan terbaru
+    ke bulan paling lama.
+  */
+  records.sort(
+    (a,b)=>b.date-a.date
+  );
+
+
+  if(records.length === 0){
+
+    history.innerHTML =
+      `<div class="empty">
+        Belum ada riwayat tabungan.
+      </div>`;
+
+    return;
+
+  }
+
+
+  records.forEach(record=>{
+
+    const row =
+      document.createElement("div");
+
+    row.className =
+      "history-row";
+
+
+    row.innerHTML = `
+
+      <div class="history-month">
+        ${monthNames[record.date.getMonth()]}
+        ${record.date.getFullYear()}
+      </div>
+
+      <div class="history-info">
+
+        <div class="history-total">
+          ${rupiah(record.total)}
+        </div>
+
+        <div class="history-days">
+          ${record.count} / ${record.days} hari
+        </div>
+
+      </div>
+
+    `;
+
+
+    /*
+      Klik riwayat =
+      langsung buka bulan tersebut.
+    */
+    row.addEventListener("click",()=>{
+
+      currentDate =
+        new Date(
+          record.date.getFullYear(),
+          record.date.getMonth(),
+          1
+        );
+
+      render();
+
+      window.scrollTo({
+        top:0,
+        behavior:"smooth"
+      });
+
+    });
+
+
+    row.style.cursor =
+      "pointer";
+
+
+    history.appendChild(row);
+
+  });
+
+}
+
+
+/*
+  Reset hanya bulan yang sedang dibuka.
+*/
+function resetMonth(){
+
+  const month =
+    monthNames[currentDate.getMonth()];
+
+  const year =
+    currentDate.getFullYear();
+
+
+  if(
+    confirm(
+      `Hapus semua centangan ${month} ${year}?`
+    )
+  ){
+
+    localStorage.removeItem(
+      getKey(currentDate)
+    );
+
+    render();
+
+  }
+
+}
+
+
+/* Jalankan aplikasi */
+render();
+
+</script>
+
+</body>
+</html>
